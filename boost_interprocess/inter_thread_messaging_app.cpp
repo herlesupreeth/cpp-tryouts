@@ -13,22 +13,23 @@
 
 using namespace boost::interprocess;
 
-auto Sender() -> int {
+auto Sender() -> int
+{
     try {
         message_queue s_to_r(open_or_create, "sender_to_receiver_queue",
-                             MAX_MSG_NUMBER, MAX_MSG_SIZE);
+                MAX_MSG_NUMBER, MAX_MSG_SIZE);
         message_queue r_to_s(open_or_create, "receiver_to_sender_queue",
-                             MAX_MSG_NUMBER, MAX_MSG_SIZE);
+                MAX_MSG_NUMBER, MAX_MSG_SIZE);
 
         std::string final_msg{};
 
-        for (int i = 0; i < 20; i++) {
-            std::string msg = "Hello World from Sender " + std::to_string(i) + "\n";
+        for (int i = 0; i<20; i++) {
+            std::string msg = "Hello World from Sender "+std::to_string(i)+"\n";
             s_to_r.send(msg.c_str(), msg.size(), 0);
             //mq.try_send(msg.c_str(), msg.size() + 1, 0);
         }
 
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i<20; i++) {
             std::string received_msg{};
             received_msg.resize(MAX_MSG_SIZE);
             size_t recvd_size{};
@@ -41,7 +42,8 @@ auto Sender() -> int {
             final_msg.append(received_msg);
         }
         std::cout << "Total received message at Sender:\n" << final_msg << std::endl;
-    } catch (interprocess_exception& ex) {
+    }
+    catch (interprocess_exception& ex) {
         std::cout << ex.what() << std::endl;
         message_queue::remove("sender_to_receiver_queue");
         message_queue::remove("receiver_to_sender_queue");
@@ -50,21 +52,22 @@ auto Sender() -> int {
     return 0;
 }
 
-auto Receiver() -> int {
+auto Receiver() -> int
+{
     try {
         message_queue s_to_r(open_or_create, "sender_to_receiver_queue",
-                             MAX_MSG_NUMBER, MAX_MSG_SIZE);
+                MAX_MSG_NUMBER, MAX_MSG_SIZE);
         message_queue r_to_s(open_or_create, "receiver_to_sender_queue",
-                             MAX_MSG_NUMBER, MAX_MSG_SIZE);
+                MAX_MSG_NUMBER, MAX_MSG_SIZE);
 
         std::string final_msg{};
 
-        for (int i = 0; i < 20; i++) {
-            std::string msg = "Hello World from Receiver " + std::to_string(i) + "\n";
+        for (int i = 0; i<20; i++) {
+            std::string msg = "Hello World from Receiver "+std::to_string(i)+"\n";
             r_to_s.send(msg.c_str(), msg.size(), 0);
         }
 
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i<20; i++) {
             std::string received_msg{};
             received_msg.resize(MAX_MSG_SIZE);
             size_t recvd_size{};
@@ -77,7 +80,8 @@ auto Receiver() -> int {
             final_msg.append(received_msg);
         }
         std::cout << "Total received message at Receiver:\n" << final_msg << std::endl;
-    } catch (interprocess_exception &ex) {
+    }
+    catch (interprocess_exception& ex) {
         std::cout << ex.what() << std::endl;
         message_queue::remove("sender_to_receiver_queue");
         message_queue::remove("receiver_to_sender_queue");
@@ -86,7 +90,8 @@ auto Receiver() -> int {
     return 0;
 }
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+{
     message_queue::remove("sender_to_receiver_queue");
     message_queue::remove("receiver_to_sender_queue");
 

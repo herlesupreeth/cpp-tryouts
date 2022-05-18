@@ -7,3 +7,5 @@ set(SOURCE_FILES main.cpp)
 add_executable(cpp_tryout ${SOURCE_FILES})
 
 add_subdirectory(boost_interprocess)
+
+add_subdirectory(print_in_order)
