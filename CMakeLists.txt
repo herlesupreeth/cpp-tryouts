@@ -8,4 +8,4 @@ add_executable(cpp_tryout ${SOURCE_FILES})
 
 add_subdirectory(boost_interprocess)
 
-add_subdirectory(print_in_order)
+add_subdirectory(boost_asio_mq)
