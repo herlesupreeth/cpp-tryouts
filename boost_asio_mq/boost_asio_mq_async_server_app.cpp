@@ -23,9 +23,9 @@ class udp_server {
 
  private:
   void start_receive() {
-	recv_buffer_.reserve(1024);
+	recv_buffer_.resize(1024);
 	socket_.async_receive_from(
-		boost::asio::buffer(recv_buffer_), remote_endpoint_,
+		boost::asio::buffer(recv_buffer_.data(), 1024), remote_endpoint_,
 		boost::bind(&udp_server::handle_receive, this,
 					boost::asio::placeholders::error,
 					boost::asio::placeholders::bytes_transferred));
@@ -36,8 +36,11 @@ class udp_server {
 	  if (bytes_transferred > 0) {
 		recv_buffer_.resize(bytes_transferred);
 		std::cout << "Received (S): " << recv_buffer_ << std::endl;
+
+		sleep(3);
+
 		boost::shared_ptr<std::string> message(
-			new std::string(make_daytime_string()));
+			new std::string("Server Timestamp - " + make_daytime_string()));
 
 		socket_.async_send_to(boost::asio::buffer(*message), remote_endpoint_,
 							  boost::bind(&udp_server::handle_send, this, message,
