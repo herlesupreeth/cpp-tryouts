@@ -29,7 +29,7 @@ class udp_client {
 			  << " Port: " << socket_.local_endpoint().port() << std::endl;
 
 	boost::shared_ptr<std::string> message(
-		new std::string("From client:" + make_daytime_string()));
+		new std::string("Client Timestamp - " + make_daytime_string()));
 
 	socket_.send_to(boost::asio::buffer(*message), server_endpoint_);
 
