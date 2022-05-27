@@ -16,7 +16,7 @@ std::string make_daytime_string() {
 
 class udp_server {
  public:
-  udp_server(boost::asio::io_context &io_context)
+  explicit udp_server(boost::asio::io_context &io_context)
 	  : socket_(io_context, udp::endpoint(udp::v4(), 13000)) {
 	recv_buffer_.resize(1024);
 	start(io_context);
@@ -89,12 +89,18 @@ class udp_server {
 };
 
 int main() {
+  std::cout << "Main thread id: " << std::this_thread::get_id() << std::endl;
   try {
 	std::cout << "Starting server ..." << std::endl;
 
-	boost::asio::io_context io_context;
+	boost::asio::io_context io_context(2);
 	udp_server server(io_context);
-	io_context.run();
+
+	auto t1 = std::thread([&io_context]() { io_context.run(); });
+	auto t2 = std::thread([&io_context]() { io_context.run(); });
+
+	t1.join();
+	t2.join();
 
 	std::cout << "Closing server ..." << std::endl;
   } catch (std::exception &e) {
