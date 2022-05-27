@@ -1,7 +1,6 @@
 #include <ctime>
 #include <iostream>
 #include <string>
-#include <boost/array.hpp>
 #include <boost/bind/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>
@@ -52,8 +51,6 @@ class udp_client {
 		recv_buffer_.resize(bytes_transferred);
 		std::cout << "Received (C): " << recv_buffer_ << std::endl;
 
-		sleep(3);
-
 		boost::shared_ptr<std::string> message(
 			new std::string("Client Timestamp - " + make_daytime_string()));
 
@@ -62,7 +59,11 @@ class udp_client {
 										  boost::asio::placeholders::error,
 										  boost::asio::placeholders::bytes_transferred));
 	  }
-	  start_receive();
+	  socket_.async_receive_from(
+		  boost::asio::buffer(recv_buffer_.data(), 1024), remote_endpoint_,
+		  boost::bind(&udp_client::handle_receive, this,
+					  boost::asio::placeholders::error,
+					  boost::asio::placeholders::bytes_transferred));
 	}
   }
 

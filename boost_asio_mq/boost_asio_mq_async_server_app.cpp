@@ -1,7 +1,7 @@
 #include <ctime>
 #include <iostream>
 #include <string>
-#include <boost/array.hpp>
+#include <future>
 #include <boost/bind/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>
@@ -16,26 +16,46 @@ std::string make_daytime_string() {
 
 class udp_server {
  public:
-  explicit udp_server(boost::asio::io_context &io_context)
+  udp_server(boost::asio::io_context &io_context)
 	  : socket_(io_context, udp::endpoint(udp::v4(), 13000)) {
-	start_receive();
+	recv_buffer_.resize(1024);
+	start(io_context);
   }
 
  private:
-  void start_receive() {
-	recv_buffer_.resize(1024);
+  void start(boost::asio::io_context &io_context) {
 	socket_.async_receive_from(
 		boost::asio::buffer(recv_buffer_.data(), 1024), remote_endpoint_,
-		boost::bind(&udp_server::handle_receive, this,
-					boost::asio::placeholders::error,
-					boost::asio::placeholders::bytes_transferred));
+		[this](boost::system::error_code error, std::size_t bytes_transferred) {
+		  handle_receive(error, bytes_transferred);
+		});
+
+	io_context.post([this, &io_context]() {
+	  another_task(io_context);
+	});
+  }
+
+  void another_task(boost::asio::io_context &io_context) {
+	auto start = std::chrono::high_resolution_clock::now();
+	auto end = start + std::chrono::seconds{3};
+	do {
+	  std::this_thread::yield();
+	} while (std::chrono::high_resolution_clock::now() < end);
+
+	std::cout << "Another Task thread id: " << std::this_thread::get_id() << std::endl;
+
+	io_context.post([this, &io_context]() {
+	  another_task(io_context);
+	});
   }
 
   void handle_receive(const boost::system::error_code &error, std::size_t bytes_transferred) {
 	if (!error) {
 	  if (bytes_transferred > 0) {
 		recv_buffer_.resize(bytes_transferred);
-		std::cout << "Received (S): " << recv_buffer_ << std::endl;
+
+		std::cout << "Handle receive thread id: " << std::this_thread::get_id() << "\n"
+				  << "Received (S): " << recv_buffer_ << std::endl;
 
 		sleep(3);
 
@@ -48,7 +68,13 @@ class udp_server {
 										  boost::asio::placeholders::bytes_transferred));
 
 	  }
-	  start_receive();
+	  // Receive again
+	  recv_buffer_.resize(1024);
+	  socket_.async_receive_from(
+		  boost::asio::buffer(recv_buffer_.data(), 1024), remote_endpoint_,
+		  [this](boost::system::error_code error, std::size_t bytes_transferred) {
+			handle_receive(error, bytes_transferred);
+		  });
 	}
   }
 
